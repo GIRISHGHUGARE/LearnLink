@@ -11,7 +11,7 @@ const connectDB = require('./config/db');
 const userRoutes = require("./routes/userRoutes")
 const tutorRoutes = require("./routes/tutorRoutes")
 const parentRoutes = require("./routes/parentRoutes")
-
+const sessionRoutes = require("./routes/sessionRoutes")
 // DOTENV
 dotenv.config();
 
@@ -45,6 +45,7 @@ app.get("", (req, res) => {
 app.use("/api/v1/auth", userRoutes)
 app.use("/api/v1/tutor", tutorRoutes)
 app.use("/api/v1/parent", parentRoutes)
+app.use("/api/v1/session", sessionRoutes)
 
 
 

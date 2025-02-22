@@ -1,5 +1,6 @@
 const Tutor = require('../models/Tutor');
 const User = require('../models/User');
+const Session = require('../models/Session');
 
 // CREATE OR UPDATE TUTOR PROFILE
 const createOrUpdateTutorProfile = async (req, res) => {
@@ -78,6 +79,36 @@ const getAllTutors = async (req, res) => {
     }
 };
 
+// GET AVAILABLE TUTOR PROFILE
+const getAvailableTutors = async (req, res) => {
+    try {
+        const { date } = req.query;
+        if (!date) return res.status(400).json({ message: "Date is required" });
+
+        // Ensure `date` is a string in "YYYY-MM-DD" format to match stored `day`
+        const formattedDate = new Date(date).toISOString().split("T")[0];
+        let tutors = await Tutor.find({
+            "availability.day": formattedDate
+        }).populate("userId", "username profilePhoto");
+        // Fetch booked sessions on this date
+        const bookedSessions = await Session.find({ date: formattedDate, status: "Booked" });
+
+        // Remove tutors who have all slots booked
+        tutors = tutors.filter(tutor => {
+            const tutorAvailability = tutor.availability.find(avail => avail.day === formattedDate);
+            const tutorSessions = bookedSessions.filter(session => session.tutorId.toString() === tutor._id.toString());
+
+            // If timeSlots is empty, assume unlimited availability
+            return tutorAvailability && (tutorAvailability.timeSlots.length === 0 || tutorSessions.length < tutorAvailability.timeSlots.length);
+        });
+        res.status(200).json({ success: true, tutors });
+    } catch (error) {
+        console.error("Error fetching available tutors:", error);
+        res.status(500).json({ message: "Server error" });
+    }
+};
+
+
 // DELETE TUTOR PROFILE
 const deleteTutorProfile = async (req, res) => {
     try {
@@ -93,4 +124,4 @@ const deleteTutorProfile = async (req, res) => {
     }
 };
 
-module.exports = { createOrUpdateTutorProfile, getTutorProfile, getAllTutors, deleteTutorProfile };
+module.exports = { createOrUpdateTutorProfile, getTutorProfile, getAllTutors, getAvailableTutors, deleteTutorProfile };

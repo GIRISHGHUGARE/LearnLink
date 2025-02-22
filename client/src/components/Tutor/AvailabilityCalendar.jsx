@@ -9,18 +9,10 @@ import getDay from "date-fns/getDay";
 import enUS from "date-fns/locale/en-US";
 import client from "../../lib/axios";
 
-const locales = {
-    "en-US": enUS,
-};
-const localizer = dateFnsLocalizer({
-    format,
-    parse,
-    startOfWeek,
-    getDay,
-    locales,
-});
+const locales = { "en-US": enUS };
+const localizer = dateFnsLocalizer({ format, parse, startOfWeek, getDay, locales });
 
-const Availability = ({ tutorId }) => {
+const TutorAvailability = ({ tutorId }) => {
     const [availability, setAvailability] = useState([]);
     const [sessions, setSessions] = useState([]);
     const [selectedDate, setSelectedDate] = useState(null);
@@ -43,8 +35,9 @@ const Availability = ({ tutorId }) => {
 
     const fetchSessions = async () => {
         try {
-            const res = await client.get(`/sessions/tutor/${tutorId}`);
+            const res = await client.get(`/session/tutor/${tutorId}`);
             setSessions(res.data.sessions || []);
+            console.log(res.data.sessions)
         } catch (error) {
             console.error("Error fetching sessions:", error);
         }
@@ -54,22 +47,10 @@ const Availability = ({ tutorId }) => {
         setSelectedDate(start);
     };
 
-    const handleTimeSlotChange = (e) => {
-        setTimeSlots(e.target.value.split(","));
-    };
-
     const handleSaveAvailability = async () => {
         try {
-            const updatedAvailability = [
-                ...availability,
-                { day: format(selectedDate, "yyyy-MM-dd"), timeSlots },
-            ];
-
-            await client.post(`/tutor/profile`, {
-                availability: updatedAvailability,
-            }, {
-                headers: { Authorization: `Bearer ${token}` },
-            });
+            const updatedAvailability = [...availability, { day: format(selectedDate, "yyyy-MM-dd"), timeSlots }];
+            await axios.post(`/tutor/profile`, { availability: updatedAvailability }, { headers: { Authorization: `Bearer ${token}` } });
             setAvailability(updatedAvailability);
         } catch (error) {
             console.error("Error updating availability:", error);
@@ -77,18 +58,8 @@ const Availability = ({ tutorId }) => {
     };
 
     const events = [
-        ...availability.map((slot) => ({
-            start: new Date(slot.day),
-            end: new Date(slot.day),
-            title: "Available",
-            color: "green",
-        })),
-        ...sessions.map((session) => ({
-            start: new Date(session.date),
-            end: new Date(session.date),
-            title: "Booked",
-            color: "red",
-        })),
+        ...availability.map((slot) => ({ start: new Date(slot.day), end: new Date(slot.day), title: "Available", color: "green" })),
+        ...sessions.map((session) => ({ start: new Date(session.date), end: new Date(session.date), title: "Booked", color: "red" })),
     ];
 
     return (
@@ -102,11 +73,7 @@ const Availability = ({ tutorId }) => {
                 selectable
                 onSelectSlot={handleSelectSlot}
                 style={{ height: 500 }}
-                eventPropGetter={(event) => {
-                    return {
-                        style: { backgroundColor: event.color },
-                    };
-                }}
+                eventPropGetter={(event) => ({ style: { backgroundColor: event.color } })}
             />
             {selectedDate && (
                 <div className="mt-4">
@@ -114,13 +81,10 @@ const Availability = ({ tutorId }) => {
                     <input
                         type="text"
                         placeholder="Enter available time slots (comma separated)"
-                        onChange={handleTimeSlotChange}
+                        onChange={(e) => setTimeSlots(e.target.value.split(","))}
                         className="border p-2 w-full mt-2"
                     />
-                    <button
-                        onClick={handleSaveAvailability}
-                        className="mt-2 bg-green-500 text-white px-4 py-2 rounded"
-                    >
+                    <button onClick={handleSaveAvailability} className="mt-2 bg-green-500 text-white px-4 py-2 rounded">
                         Save Availability
                     </button>
                 </div>
@@ -129,4 +93,4 @@ const Availability = ({ tutorId }) => {
     );
 };
 
-export default Availability;
+export default TutorAvailability;

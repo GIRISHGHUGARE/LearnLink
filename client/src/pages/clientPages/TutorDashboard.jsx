@@ -1,14 +1,18 @@
 import { useState } from "react";
-import { FaUser, FaCalendarCheck, FaChalkboardTeacher, FaEnvelope, FaStar, FaBars } from "react-icons/fa";
+import { useDispatch } from "react-redux";
+import { FaUser, FaCalendarCheck, FaChalkboardTeacher, FaEnvelope, FaStar, FaBars, FaSignOutAlt } from "react-icons/fa";
 import Profile from "../../components/Tutor/Profile";
 import Availability from "../../components/Tutor/AvailabilityCalendar";
-import { selectUser } from "../../redux/features/auth/authSlice";
+import { selectUser, logout } from "../../redux/features/auth/authSlice";
 import { useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 
 const TutorDashboard = () => {
     const [activeTab, setActiveTab] = useState("profile");
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
     const user = useSelector(selectUser);
+    const dispatch = useDispatch();
+    const navigate = useNavigate();
 
     const menuItems = [
         { key: "profile", label: "Profile", icon: <FaUser /> },
@@ -17,6 +21,12 @@ const TutorDashboard = () => {
         { key: "messages", label: "Messages", icon: <FaEnvelope /> },
         { key: "reviews", label: "Reviews", icon: <FaStar /> },
     ];
+
+    const handleLogout = () => {
+        dispatch(logout());
+        localStorage.removeItem("authToken");
+        navigate("/login");
+    };
 
     return (
         <div className="flex h-screen">
@@ -35,6 +45,15 @@ const TutorDashboard = () => {
                         </button>
                     ))}
                 </nav>
+
+                {/* Logout Button */}
+                <button
+                    onClick={handleLogout}
+                    className="flex items-center space-x-2 p-2 rounded w-full transition bg-red-600 text-white mt-6 hover:bg-red-700"
+                >
+                    <FaSignOutAlt />
+                    <span>Logout</span>
+                </button>
             </div>
 
             {/* Main Content */}
@@ -44,11 +63,10 @@ const TutorDashboard = () => {
                     <FaBars size={24} />
                 </button>
 
-                {/* Dynamic Content Goes Here */}
+                {/* Dynamic Content */}
                 <div className="mt-4">
                     {activeTab === "profile" && <Profile />}
                     {activeTab === "availability" && <Availability tutorId={user._id} />}
-                    {/* Add other components when available */}
                 </div>
             </div>
         </div>

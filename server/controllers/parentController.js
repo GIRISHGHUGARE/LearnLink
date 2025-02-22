@@ -37,7 +37,7 @@ const createOrUpdateParentProfile = async (req, res) => {
 const getParentProfile = async (req, res) => {
     try {
         const { parentId } = req.params;
-        const parent = await Parent.findById(parentId).populate('userId', 'username email');
+        const parent = await Parent.findOne({ userId: parentId }).populate('userId', 'username email profilePhoto phone address pincode');
 
         if (!parent) return res.status(404).json({ message: "Parent not found" });
 

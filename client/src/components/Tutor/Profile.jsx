@@ -33,7 +33,6 @@ const Profile = () => {
         languages: tutor?.languages || [],
         gender: tutor?.gender || "",
         teachingMethodology: tutor?.teachingMethodology || "",
-
         certifications: tutor?.certifications || "",
     });
 
@@ -76,7 +75,7 @@ const Profile = () => {
             formData.append("upload_preset", "tutor_upload"); // Use your Cloudinary upload preset
 
             try {
-                const res = await fetch(`https://api.cloudinary.com/v1_1//image/upload`, {
+                const res = await fetch(`https://api.cloudinary.com/v1_1/dd5fonyup/image/upload`, {
                     method: "POST",
                     body: formData,
                 });
