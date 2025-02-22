@@ -8,6 +8,8 @@ import startOfWeek from "date-fns/startOfWeek";
 import getDay from "date-fns/getDay";
 import enUS from "date-fns/locale/en-US";
 import client from "../../lib/axios";
+import { useSelector } from "react-redux";
+import { selectUser } from "../../redux/features/auth/authSlice";
 
 const locales = { "en-US": enUS };
 const localizer = dateFnsLocalizer({ format, parse, startOfWeek, getDay, locales });
@@ -20,12 +22,29 @@ const ParentBooking = ({ parentId }) => {
     const [selectedTime, setSelectedTime] = useState("");
     const [rescheduleSessionId, setRescheduleSessionId] = useState(null);
     const token = localStorage.getItem("authToken");
+    const [parentInfo, setParentInfo] = useState({})
+    const user = useSelector(selectUser)
+    useEffect(() => {
+        if (user?._id) {
+            client.get(`/parent/${user._id}`)
+                .then(response => {
+                    setParentInfo(response.data.parent);
+                })
+                .catch(error => console.error("Error fetching parent details:", error));
+        }
+    }, [user?._id]);  // Fetch parent info when user ID is available
 
     useEffect(() => {
         if (selectedDate) fetchAvailableTutors();
         fetchSessions();
     }, [selectedDate]);
-    console.log(sessions)
+
+    useEffect(() => {
+        if (parentInfo?._id) {
+            fetchSessions(parentInfo._id);
+        }
+    }, [parentInfo?._id]);  // Fetch sessions only after parentInfo._id is set
+
     const fetchAvailableTutors = async () => {
         try {
             const formattedDate = format(selectedDate, "yyyy-MM-dd");
@@ -38,7 +57,8 @@ const ParentBooking = ({ parentId }) => {
     };
 
 
-    const fetchSessions = async () => {
+
+    const fetchSessions = async (parentId) => {
         try {
             const res = await client.get(`/session/parent/${parentId}`);
             setSessions(res.data.sessions || []);
@@ -57,7 +77,7 @@ const ParentBooking = ({ parentId }) => {
         try {
             await client.post("/session/book", {
                 tutorId: selectedTutor,
-                parentId,
+                parentId: parentInfo._id,
                 childName: "Anushka Upadhyay",
                 subject: "English",
                 date: format(selectedDate, "yyyy-MM-dd"),

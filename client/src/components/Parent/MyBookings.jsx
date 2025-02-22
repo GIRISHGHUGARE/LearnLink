@@ -5,15 +5,28 @@ import { selectUser } from "../../redux/features/auth/authSlice";
 
 const MyBookings = () => {
     const [sessions, setSessions] = useState([]);
+    const [parentInfo, setParentInfo] = useState(null);
     const user = useSelector(selectUser);
 
     useEffect(() => {
-        fetchSessions();
-    }, []);
+        if (user?._id) {
+            client.get(`/parent/${user._id}`)
+                .then(response => {
+                    setParentInfo(response.data.parent);
+                })
+                .catch(error => console.error("Error fetching parent details:", error));
+        }
+    }, [user?._id]);  // Fetch parent info when user ID is available
 
-    const fetchSessions = async () => {
+    useEffect(() => {
+        if (parentInfo?._id) {
+            fetchSessions(parentInfo._id);
+        }
+    }, [parentInfo?._id]);  // Fetch sessions only after parentInfo._id is set
+
+    const fetchSessions = async (parentId) => {
         try {
-            const res = await client.get(`/session/parent/${user._id}`);
+            const res = await client.get(`/session/parent/${parentId}`);
             setSessions(res.data.sessions || []);
         } catch (error) {
             console.error("Error fetching sessions:", error);

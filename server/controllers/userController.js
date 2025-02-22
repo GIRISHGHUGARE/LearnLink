@@ -132,7 +132,6 @@ const verifyUser = async (req, res) => {
 const updateUser = async (req, res) => {
     try {
         const userId = req.user;
-        console.log(userId)
         const { username, phone, address, pincode, profilePhoto } = req.body;
 
         // Validate request

@@ -18,7 +18,6 @@ const getSessionsByParent = async (req, res) => {
                 select: "username profilePhoto", // Fetch only username & profilePhoto
             },
         });
-        console.log(sessions)
         res.status(200).json({ success: true, sessions });
     } catch (error) {
         console.error("Error fetching sessions for parent:", error);
@@ -33,24 +32,41 @@ const getSessionsByTutor = async (req, res) => {
         if (!tutorId) {
             return res.status(400).json({ message: "Tutor ID is required" });
         }
-        // Fetch sessions with parent details
-        // Fetch sessions with parent details including user info
-        const sessions = await Session.find({ tutorId })
-            .populate({
-                path: "parentId", // Populate parent details
-                populate: {
-                    path: "userId", // Nested populate to get user info
-                    model: "User", // Explicitly specify the model
-                    select: "username profilePhoto" // Get only required fields
-                }
-            });
 
-        res.status(200).json({ success: true, sessions });
+        // Fetch sessions
+        const sessions = await Session.find({ tutorId });
+
+        // Fetch Parent and User details manually
+        const sessionsWithDetails = await Promise.all(
+            sessions.map(async (session) => {
+                if (!session.parentId) {
+                    return { ...session.toObject(), parentDetails: null };
+                }
+
+                const parent = await Parent.findById(session.parentId);
+                if (!parent || !parent.userId) {
+                    return { ...session.toObject(), parentDetails: null };
+                }
+                console.log(parent)
+                const user = await User.findById(parent.userId).select("username profilePhoto");
+                console.log(user)
+                return {
+                    ...session.toObject(),
+                    parentDetails: user
+                        ? { _id: parent._id, user }
+                        : { _id: parent._id, user: null }
+                };
+            })
+        );
+        console.log(sessions)
+        res.status(200).json({ success: true, sessions: sessionsWithDetails });
     } catch (error) {
         console.error("Error fetching sessions for tutor:", error);
         res.status(500).json({ message: "Server error" });
     }
 };
+
+
 
 const bookSession = async (req, res) => {
     try {

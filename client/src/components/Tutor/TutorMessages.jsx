@@ -1,44 +1,31 @@
 import { useState, useEffect } from "react";
-import { FaUserCircle } from "react-icons/fa";
 import { FiSend } from "react-icons/fi";
-import axios from "axios";
 import { useSelector } from "react-redux";
 import client from "../../lib/axios";
 import { selectUser } from "../../redux/features/auth/authSlice";
 
-const Messages = () => {
+const TutorMessages = () => {
     const [selectedChat, setSelectedChat] = useState(null);
     const [message, setMessage] = useState("");
     const [chats, setChats] = useState([]);
     const [messages, setMessages] = useState([]);
     const user = useSelector(selectUser);
     const token = localStorage.getItem("authToken");
-    const [parentInfo, setParentInfo] = useState(null);
+    const tutorId = localStorage.getItem("tutorId");
 
     useEffect(() => {
-        if (user?._id) {
-            client.get(`/parent/${user._id}`)
-                .then(response => {
-                    setParentInfo(response.data.parent);
-                })
-                .catch(error => console.error("Error fetching parent details:", error));
-        }
-    }, [user?._id]);  // Fetch parent info when user ID is available
+        const fetchChats = async () => {
+            try {
+                const response = await client.get(`/session/tutor/${tutorId}`); // Fetch tutor's sessions
+                setChats(response.data.sessions);
+                console.log(response.data.sessions)
+            } catch (error) {
+                console.error("Error fetching chats:", error);
+            }
+        };
 
-    useEffect(() => {
-        if (parentInfo?._id) {
-            fetchSessions(parentInfo._id);
-        }
-    }, [parentInfo?._id]);  // Fetch sessions only after parentInfo._id is set
-
-    const fetchSessions = async (parentId) => {
-        try {
-            const res = await client.get(`/session/parent/${parentId}`);
-            setChats(res.data.sessions);
-        } catch (error) {
-            console.error("Error fetching sessions:", error);
-        }
-    };
+        if (user) fetchChats();
+    }, [user]);
 
     const fetchMessages = async (sessionId) => {
         try {
@@ -56,10 +43,9 @@ const Messages = () => {
     const sendMessage = async () => {
         if (message.trim() !== "" && selectedChat) {
             try {
-                const response = await client.post("/messages/send", {
-                    senderId: user._id,
-                    receiverId: selectedChat.tutorId.userId._id,
-                    sessionId: selectedChat._id, // Send sessionId
+                await client.post("/messages/send", {
+                    receiverId: selectedChat.parentDetails.user._id, // Parent is the receiver
+                    sessionId: selectedChat._id,
                     message,
                 }, {
                     headers: {
@@ -67,7 +53,7 @@ const Messages = () => {
                     }
                 });
 
-                setMessages((prevMessages) => [...prevMessages, { senderId: user._id, message }]);
+                setMessages((prevMessages) => [...prevMessages, { senderId: { _id: user._id }, message }]);
                 setMessage("");
             } catch (error) {
                 console.error("Error sending message:", error);
@@ -88,11 +74,11 @@ const Messages = () => {
                                 }`}
                             onClick={() => {
                                 setSelectedChat(chat);
-                                fetchMessages(chat._id); // Fetch messages for selected session
+                                fetchMessages(chat._id);
                             }}
                         >
-                            <img src={chat.tutorId.userId.profilePhoto} className="w-10 h-10 rounded-3xl" />
-                            <span className="text-lg font-medium">{chat.tutorId.userId.username}</span>
+                            <img src={chat.parentDetails.user.profilePhoto || ""} className="w-10 h-10 rounded-3xl" />
+                            <span className="text-lg font-medium">{chat.parentDetails.user.username}</span>
                         </div>
                     ))}
                 </div>
@@ -103,21 +89,18 @@ const Messages = () => {
                 {selectedChat ? (
                     <>
                         <div className="p-4 bg-blue-500 text-white text-lg font-semibold flex items-center gap-3">
-                            <img src={selectedChat.tutorId.userId.profilePhoto} className="w-10 h-10 rounded-3xl" /> {selectedChat.tutorId.userId.username}
+                            <img src={selectedChat.parentDetails.user.profilePhoto} className="w-10 h-10 rounded-3xl" /> {selectedChat.parentDetails.user.username}
                         </div>
                         <div className="flex-1 p-4 overflow-y-auto bg-gray-50">
                             {messages.map((msg, index) => {
-                                const isSentByUser = msg.senderId._id === user._id; // Ensure correct ID check
-
+                                const isSentByUser = msg.senderId._id === user._id; // Check correct sender
                                 return (
                                     <div
                                         key={index}
                                         className={`mb-2 ${isSentByUser ? "text-right" : "text-left"}`}
                                     >
                                         <span
-                                            className={`p-2 rounded-lg inline-block ${isSentByUser
-                                                ? "bg-blue-500 text-white"
-                                                : "bg-gray-300"
+                                            className={`p-2 rounded-lg inline-block ${isSentByUser ? "bg-blue-500 text-white" : "bg-gray-300"
                                                 }`}
                                         >
                                             {msg.message}
@@ -152,4 +135,4 @@ const Messages = () => {
     );
 };
 
-export default Messages;
+export default TutorMessages;

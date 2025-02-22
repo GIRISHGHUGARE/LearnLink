@@ -7,6 +7,7 @@ import { selectUser, logout } from "../../redux/features/auth/authSlice";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import Sessions from "../../components/Tutor/Sessions";
+import TutorMessages from "../../components/Tutor/TutorMessages";
 
 const TutorDashboard = () => {
     const [activeTab, setActiveTab] = useState("profile");
@@ -71,6 +72,7 @@ const TutorDashboard = () => {
                     {activeTab === "profile" && <Profile />}
                     {activeTab === "availability" && <Availability tutorId={tutorId} />}
                     {activeTab === "sessions" && <Sessions />}
+                    {activeTab === "messages" && <TutorMessages />}
                 </div>
             </div>
         </div>
