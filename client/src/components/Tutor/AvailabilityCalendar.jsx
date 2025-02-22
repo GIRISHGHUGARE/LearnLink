@@ -1,0 +1,132 @@
+import { useState, useEffect } from "react";
+import axios from "axios";
+import { Calendar, dateFnsLocalizer } from "react-big-calendar";
+import "react-big-calendar/lib/css/react-big-calendar.css";
+import format from "date-fns/format";
+import parse from "date-fns/parse";
+import startOfWeek from "date-fns/startOfWeek";
+import getDay from "date-fns/getDay";
+import enUS from "date-fns/locale/en-US";
+import client from "../../lib/axios";
+
+const locales = {
+    "en-US": enUS,
+};
+const localizer = dateFnsLocalizer({
+    format,
+    parse,
+    startOfWeek,
+    getDay,
+    locales,
+});
+
+const Availability = ({ tutorId }) => {
+    const [availability, setAvailability] = useState([]);
+    const [sessions, setSessions] = useState([]);
+    const [selectedDate, setSelectedDate] = useState(null);
+    const [timeSlots, setTimeSlots] = useState([]);
+    const token = localStorage.getItem("authToken");
+
+    useEffect(() => {
+        fetchAvailability();
+        fetchSessions();
+    }, []);
+
+    const fetchAvailability = async () => {
+        try {
+            const res = await client.get(`/tutor/${tutorId}`);
+            setAvailability(res.data.tutor.availability || []);
+        } catch (error) {
+            console.error("Error fetching availability:", error);
+        }
+    };
+
+    const fetchSessions = async () => {
+        try {
+            const res = await client.get(`/sessions/tutor/${tutorId}`);
+            setSessions(res.data.sessions || []);
+        } catch (error) {
+            console.error("Error fetching sessions:", error);
+        }
+    };
+
+    const handleSelectSlot = ({ start }) => {
+        setSelectedDate(start);
+    };
+
+    const handleTimeSlotChange = (e) => {
+        setTimeSlots(e.target.value.split(","));
+    };
+
+    const handleSaveAvailability = async () => {
+        try {
+            const updatedAvailability = [
+                ...availability,
+                { day: format(selectedDate, "yyyy-MM-dd"), timeSlots },
+            ];
+
+            await client.post(`/tutor/profile`, {
+                availability: updatedAvailability,
+            }, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            setAvailability(updatedAvailability);
+        } catch (error) {
+            console.error("Error updating availability:", error);
+        }
+    };
+
+    const events = [
+        ...availability.map((slot) => ({
+            start: new Date(slot.day),
+            end: new Date(slot.day),
+            title: "Available",
+            color: "green",
+        })),
+        ...sessions.map((session) => ({
+            start: new Date(session.date),
+            end: new Date(session.date),
+            title: "Booked",
+            color: "red",
+        })),
+    ];
+
+    return (
+        <div>
+            <h2 className="text-xl font-semibold">Manage Availability</h2>
+            <Calendar
+                localizer={localizer}
+                events={events}
+                startAccessor="start"
+                endAccessor="end"
+                selectable
+                onSelectSlot={handleSelectSlot}
+                style={{ height: 500 }}
+                eventPropGetter={(event) => {
+                    return {
+                        style: { backgroundColor: event.color },
+                    };
+                }}
+            />
+            {selectedDate && (
+                <div className="mt-4">
+                    <h3 className="text-lg">Selected Date: {format(selectedDate, "yyyy-MM-dd")}</h3>
+                    <input
+                        type="text"
+                        placeholder="Enter available time slots (comma separated)"
+                        onChange={handleTimeSlotChange}
+                        className="border p-2 w-full mt-2"
+                    />
+                    <button
+                        onClick={handleSaveAvailability}
+                        className="mt-2 bg-green-500 text-white px-4 py-2 rounded"
+                    >
+                        Save Availability
+                    </button>
+                </div>
+            )}
+        </div>
+    );
+};
+
+export default Availability;
