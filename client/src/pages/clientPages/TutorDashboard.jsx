@@ -6,6 +6,7 @@ import Availability from "../../components/Tutor/AvailabilityCalendar";
 import { selectUser, logout } from "../../redux/features/auth/authSlice";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
+import Sessions from "../../components/Tutor/Sessions";
 
 const TutorDashboard = () => {
     const [activeTab, setActiveTab] = useState("profile");
@@ -13,6 +14,7 @@ const TutorDashboard = () => {
     const user = useSelector(selectUser);
     const dispatch = useDispatch();
     const navigate = useNavigate();
+    const tutorId = localStorage.getItem("tutorId");
 
     const menuItems = [
         { key: "profile", label: "Profile", icon: <FaUser /> },
@@ -25,6 +27,7 @@ const TutorDashboard = () => {
     const handleLogout = () => {
         dispatch(logout());
         localStorage.removeItem("authToken");
+        localStorage.removeItem("tutorId");
         navigate("/login");
     };
 
@@ -66,7 +69,8 @@ const TutorDashboard = () => {
                 {/* Dynamic Content */}
                 <div className="mt-4">
                     {activeTab === "profile" && <Profile />}
-                    {activeTab === "availability" && <Availability tutorId={user._id} />}
+                    {activeTab === "availability" && <Availability tutorId={tutorId} />}
+                    {activeTab === "sessions" && <Sessions />}
                 </div>
             </div>
         </div>

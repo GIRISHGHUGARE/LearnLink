@@ -25,7 +25,7 @@ const ParentBooking = ({ parentId }) => {
         if (selectedDate) fetchAvailableTutors();
         fetchSessions();
     }, [selectedDate]);
-
+    console.log(sessions)
     const fetchAvailableTutors = async () => {
         try {
             const formattedDate = format(selectedDate, "yyyy-MM-dd");
@@ -108,7 +108,7 @@ const ParentBooking = ({ parentId }) => {
         ...sessions.map((session) => ({
             start: new Date(session.date),
             end: new Date(session.date),
-            title: `Session with ${session.tutorId.username}`,
+            title: `Session with ${session.tutorId.userId.username}`,
             color: session.status === "Cancelled" ? "gray" : "red"
         }))
     ];

@@ -37,7 +37,7 @@ const LandingPage = () => {
                         Empowering Learning, Connecting Tutors & Parents
                     </h2>
                     <p className="text-lg text-gray-300 mt-4 max-w-2xl">
-                        Find the perfect tutor for your child or offer your expertise as a tutor. Join us today!
+                        Find the perfect tutor for your child or offer your expertise as a tutor.
                     </p>
                     <div className="mt-6">
                         <button

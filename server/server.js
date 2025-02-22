@@ -12,6 +12,8 @@ const userRoutes = require("./routes/userRoutes")
 const tutorRoutes = require("./routes/tutorRoutes")
 const parentRoutes = require("./routes/parentRoutes")
 const sessionRoutes = require("./routes/sessionRoutes")
+const messageRoutes = require("./routes/messageRoutes")
+
 // DOTENV
 dotenv.config();
 
@@ -46,6 +48,7 @@ app.use("/api/v1/auth", userRoutes)
 app.use("/api/v1/tutor", tutorRoutes)
 app.use("/api/v1/parent", parentRoutes)
 app.use("/api/v1/session", sessionRoutes)
+app.use("/api/v1/messages", messageRoutes)
 
 
 

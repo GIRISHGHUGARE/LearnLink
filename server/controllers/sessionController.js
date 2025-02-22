@@ -1,5 +1,7 @@
 const Session = require('../models/Session')
 const Tutor = require('../models/Tutor')
+const Parent = require('../models/Parent')
+const User = require('../models/User')
 
 const getSessionsByParent = async (req, res) => {
     try {
@@ -9,7 +11,13 @@ const getSessionsByParent = async (req, res) => {
             return res.status(400).json({ message: "Parent ID is required" });
         }
 
-        const sessions = await Session.find({ parentId }).populate("tutorId", "username profilePhoto");
+        const sessions = await Session.find({ parentId }).populate({
+            path: "tutorId",
+            populate: {
+                path: "userId", // Populate user details from User model
+                select: "username profilePhoto", // Fetch only username & profilePhoto
+            },
+        });
         console.log(sessions)
         res.status(200).json({ success: true, sessions });
     } catch (error) {
@@ -23,14 +31,23 @@ const getSessionsByTutor = async (req, res) => {
         const { tutorId } = req.params;
 
         if (!tutorId) {
-            return res.status(400).json({ message: "Parent ID is required" });
+            return res.status(400).json({ message: "Tutor ID is required" });
         }
+        // Fetch sessions with parent details
+        // Fetch sessions with parent details including user info
+        const sessions = await Session.find({ tutorId })
+            .populate({
+                path: "parentId", // Populate parent details
+                populate: {
+                    path: "userId", // Nested populate to get user info
+                    model: "User", // Explicitly specify the model
+                    select: "username profilePhoto" // Get only required fields
+                }
+            });
 
-        const sessions = await Session.find({ tutorId }).populate("parentId", "username profilePhoto");
-        console.log(sessions)
         res.status(200).json({ success: true, sessions });
     } catch (error) {
-        console.error("Error fetching sessions for parent:", error);
+        console.error("Error fetching sessions for tutor:", error);
         res.status(500).json({ message: "Server error" });
     }
 };

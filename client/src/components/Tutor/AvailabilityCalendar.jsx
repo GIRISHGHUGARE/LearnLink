@@ -8,6 +8,8 @@ import startOfWeek from "date-fns/startOfWeek";
 import getDay from "date-fns/getDay";
 import enUS from "date-fns/locale/en-US";
 import client from "../../lib/axios";
+import { selectUser } from "../../redux/features/auth/authSlice";
+import { useSelector } from "react-redux";
 
 const locales = { "en-US": enUS };
 const localizer = dateFnsLocalizer({ format, parse, startOfWeek, getDay, locales });
@@ -18,6 +20,7 @@ const TutorAvailability = ({ tutorId }) => {
     const [selectedDate, setSelectedDate] = useState(null);
     const [timeSlots, setTimeSlots] = useState([]);
     const token = localStorage.getItem("authToken");
+    const user = useSelector(selectUser);
 
     useEffect(() => {
         fetchAvailability();
@@ -26,7 +29,7 @@ const TutorAvailability = ({ tutorId }) => {
 
     const fetchAvailability = async () => {
         try {
-            const res = await client.get(`/tutor/${tutorId}`);
+            const res = await client.get(`/tutor/${user._id}`);
             setAvailability(res.data.tutor.availability || []);
         } catch (error) {
             console.error("Error fetching availability:", error);
@@ -50,7 +53,7 @@ const TutorAvailability = ({ tutorId }) => {
     const handleSaveAvailability = async () => {
         try {
             const updatedAvailability = [...availability, { day: format(selectedDate, "yyyy-MM-dd"), timeSlots }];
-            await axios.post(`/tutor/profile`, { availability: updatedAvailability }, { headers: { Authorization: `Bearer ${token}` } });
+            await client.post(`/tutor/profile`, { availability: updatedAvailability }, { headers: { Authorization: `Bearer ${token}` } });
             setAvailability(updatedAvailability);
         } catch (error) {
             console.error("Error updating availability:", error);
@@ -58,8 +61,20 @@ const TutorAvailability = ({ tutorId }) => {
     };
 
     const events = [
-        ...availability.map((slot) => ({ start: new Date(slot.day), end: new Date(slot.day), title: "Available", color: "green" })),
-        ...sessions.map((session) => ({ start: new Date(session.date), end: new Date(session.date), title: "Booked", color: "red" })),
+        ...availability.map((slot) => ({
+            start: new Date(slot.day),
+            end: new Date(slot.day),
+            title: "Available",
+            color: "green",
+        })),
+        ...sessions.map((session) => ({
+            start: new Date(session.date),
+            end: new Date(session.date),
+            //title: `Booked by ${session.parentId?.username || "Unknown"}`, // Show parent's name
+            title: `Booked `, // Show parent's name
+            color: "red",
+            parentProfilePhoto: session.parentId?.profilePhoto, // Store profile photo
+        })),
     ];
 
     return (
@@ -73,7 +88,23 @@ const TutorAvailability = ({ tutorId }) => {
                 selectable
                 onSelectSlot={handleSelectSlot}
                 style={{ height: 500 }}
-                eventPropGetter={(event) => ({ style: { backgroundColor: event.color } })}
+                eventPropGetter={(event) => ({
+                    style: { backgroundColor: event.color },
+                })}
+                components={{
+                    event: ({ event }) => (
+                        <div className="flex items-center">
+                            {event.color === "red" && event.parentProfilePhoto && (
+                                <img
+                                    src={event.parentProfilePhoto}
+                                    alt="Parent"
+                                    className="w-6 h-6 rounded-full mr-2"
+                                />
+                            )}
+                            <span>{event.title}</span>
+                        </div>
+                    ),
+                }}
             />
             {selectedDate && (
                 <div className="mt-4">

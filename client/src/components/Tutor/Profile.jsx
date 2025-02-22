@@ -43,7 +43,7 @@ const Profile = () => {
                 .catch(error => console.error("Error fetching tutor details:", error));
         }
     }, [user]);
-
+    localStorage.setItem("tutorId", tutorInfo._id)
     const handleChange = (e) => {
         setUpdatedData({ ...updatedData, [e.target.name]: e.target.value });
     };
