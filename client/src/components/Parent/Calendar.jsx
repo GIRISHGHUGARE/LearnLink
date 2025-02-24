@@ -134,7 +134,7 @@ const ParentBooking = ({ parentId }) => {
     ];
 
     return (
-        <div>
+        <div className="mt-20">
             <h2 className="text-xl font-semibold">Book a Tutor</h2>
             <Calendar
                 localizer={localizer}

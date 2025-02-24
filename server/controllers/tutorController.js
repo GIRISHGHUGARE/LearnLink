@@ -70,7 +70,7 @@ const getAllTutors = async (req, res) => {
         if (grade) filters.grades = grade;
         if (language) filters.languages = language;
 
-        const tutors = await Tutor.find(filters).populate('userId', 'username email');
+        const tutors = await Tutor.find(filters).populate('userId', 'username email profilePhoto');
 
         res.status(200).json({ success: true, tutors });
     } catch (error) {
