@@ -48,7 +48,11 @@ const AuthModal = ({ isOpen, onClose, isSignup }) => {
             } else {
                 response = await client.post("/auth/login", { username, password });
                 localStorage.setItem("authToken", response.data.token);
-                navigate(role === 'parent' ? "/parentdashboard" : "/tutordashboard");
+                navigate(
+                    role === 'admin' ? "/admindashboard" :
+                        role === 'parent' ? "/parentdashboard" :
+                            "/tutordashboard"
+                );
             }
             dispatch(login(response.data.user));
             toast.success(isSignup ? "Registration successful!" : "Login successful!");

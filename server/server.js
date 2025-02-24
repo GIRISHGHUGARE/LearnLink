@@ -13,6 +13,7 @@ const tutorRoutes = require("./routes/tutorRoutes")
 const parentRoutes = require("./routes/parentRoutes")
 const sessionRoutes = require("./routes/sessionRoutes")
 const messageRoutes = require("./routes/messageRoutes")
+const adminRoutes = require("./routes/adminRoutes")
 
 // DOTENV
 dotenv.config();
@@ -49,6 +50,7 @@ app.use("/api/v1/tutor", tutorRoutes)
 app.use("/api/v1/parent", parentRoutes)
 app.use("/api/v1/session", sessionRoutes)
 app.use("/api/v1/messages", messageRoutes)
+app.use("/api/v1/admin", adminRoutes)
 
 
 

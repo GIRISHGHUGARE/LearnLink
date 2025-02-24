@@ -8,6 +8,7 @@ import OtpScreen from "./pages/authPages/OtpScreen";
 import ParentDashboard from "./pages/clientPages/ParentDashboard";
 import TutorDashboard from "./pages/clientPages/TutorDashboard";
 import './App.css'
+import AdminDashboard from "./pages/adminPages/AdminDashboard";
 
 const App = () => {
   const dispatch = useDispatch();
@@ -57,6 +58,8 @@ const App = () => {
       <Route path="/otp-screen" element={isVerified ? <Navigate to="/" /> : <OtpScreen />} />
       <Route path="/parentdashboard" element={isVerified && role === "parent" ? <ParentDashboard /> : <Navigate to="/" />} />
       <Route path="/tutordashboard" element={isVerified && role === "tutor" ? <TutorDashboard /> : <Navigate to="/" />} />
+      {/* <Route path="/admindashboard" element={isVerified && role === "admin" ? <AdminDashboard /> : <Navigate to="/" />} /> */}
+      <Route path="/admindashboard" element={<AdminDashboard />} />
       <Route path="*" element={<Navigate to="/" />} />
     </Routes>
   );
